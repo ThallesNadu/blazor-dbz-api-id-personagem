@@ -1,0 +1,73 @@
+﻿@page "/"
+@using BlazorDragonBallApi.Models
+@inject HttpClient Http
+
+<PageTitle>API DragonBall</PageTitle>
+
+<h1>API DragonBall</h1>
+
+<div class="form-group mb-3">
+    <label for="IdInput" class="form-label">Digite o ID do personagem:</label>
+    <input id="IdInput" class="form-control" @bind="id" placeholder="Ex: 1" />
+</div>
+<button class="btn btn-primary" @onclick="ConsultarPersonagem">Consultar</button>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger mt-3">@errorMessage</div>
+}
+else if (personagem != null)
+{
+    <div class="card mt-3">
+    <div class="card-body">
+        <h5 class="card-title">Personagem Encontrado</h5>
+        <p class="card-text"><strong>Nome:</strong> @personagem.Nome</p>
+        
+        <p class="card-text"><strong>Planeta:</strong> @personagem.Planeta?.Nome</p>
+        
+        <p class="card-text"><strong>Transformações:</strong></p>
+        <ul>
+            @if (personagem.Transformacoes != null && personagem.Transformacoes.Count > 0)
+            {
+                @foreach (var trans in personagem.Transformacoes)
+                {
+                    <li>@trans.Nome (Ki: @trans.Ki)</li>
+                }
+            }
+            else
+            {
+                <li>Nenhuma transformação encontrada.</li>
+            }
+        </ul>
+    </div>
+</div>
+}
+
+@code{
+    private string id;
+    private Personagem personagem;
+    private string errorMessage;
+
+    private async Task ConsultarPersonagem()
+    {
+        errorMessage =string.Empty;
+        personagem = null;
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            errorMessage = "Informe o ID do personagem.";
+            return;
+        }
+
+        try
+        {
+            var url = $"https://dragonball-api.com/api/characters/{id}";
+            personagem = await Http.GetFromJsonAsync<Personagem>(url);
+        }
+
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro ao consultar o personagem: {ex.Message}";
+            personagem = null;
+        }
+    }
+}
